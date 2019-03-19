@@ -8,15 +8,14 @@ Only supports text, page 1 - No sound, no joystick, no card support and thus no 
 
 Runs the autostart ROM with Applesoft II and monitor
 
-requires ncurses
+Requires ncurses. To be run in a terminal at least 41x26
 
-To be run in a terminal at least 41x26
----
 - F9  : reset
 - F10 : break
 - F12 : exit
 
 Uncomment lines 566-567 to display some debug info
+
 Comment line 569 to go full speed
 
 Have fun !
