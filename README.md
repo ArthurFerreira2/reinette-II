@@ -16,7 +16,7 @@ F9  : reset
 F10 : break
 F12 : exit
 
-Uncomment lines 245-246 to display some debug info
-Comment line 248 to go full speed
+Uncomment lines 566-567 to display some debug info
+Comment line 569 to go full speed
 
 Have fun !
