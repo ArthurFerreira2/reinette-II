@@ -2,7 +2,7 @@
 The french Apple II emulator
 
 A simple Apple II emulator in about 600 lines of code !
-Based on reinette, the Apple french 1 emulator ( https://github.com/ArthurFerreira2/reinette )
+Based on reinette, the french Apple 1 emulator ( https://github.com/ArthurFerreira2/reinette )
 
 Only supports text, page 1 - No sound, no joystick, no card support and thus no disk support
 
