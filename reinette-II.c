@@ -1,6 +1,27 @@
-// Reinette II, emulates the Apple II computer
-// Copyright 2018 Arthur Ferreira
-// Last modified 19th of March 2019
+/*
+ Reinette II, emulates the Apple II computer
+ Last modified 19th of March 2019
+
+ Copyright (c) 2018, 2019 Arthur Ferreira
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ */
 
 #include <stdlib.h>
 #include <ncurses.h>
@@ -573,9 +594,9 @@ int main(int argc, char *argv[]) {
         for(int col=0; col<40; col++){                     // for each column
           character = ram[baseForLines[line]+col];         // read video memory
           if (character == '`') character = '_';           // change cursor
-          if (character < 0x40) attrset(A_REVERSE);        // set REVERSE
-          else if (character > 0x7F) attrset(A_NORMAL);    // set NORMAL
-          else attrset(A_BLINK);                           // set FLASHING
+          if (character < 0x40) attrset(A_REVERSE);        // is REVERSE ?
+          else if (character > 0x7F) attrset(A_NORMAL);    // is NORMAL ?
+          else attrset(A_BLINK);                           // is FLASHING ?
           character &= 0x7F;                               // unset bit 7
           if (character > 0x5F) character &= 0x3F;         // shifts to obtain
           if (character < 0x20) character |= 0x40;         // the ASCII codes
