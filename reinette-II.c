@@ -1,5 +1,5 @@
 /*
- Reinette II, emulates the Apple II emulator
+ Reinette II, the french the Apple II emulator
  Last modified 19th of March 2019
 
  Copyright (c) 2018, 2019 Arthur Ferreira
