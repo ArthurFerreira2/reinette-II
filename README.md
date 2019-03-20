@@ -6,7 +6,7 @@ Based on reinette, the french Apple 1 emulator ( https://github.com/ArthurFerrei
 
 Only supports text, page 1 - No sound, no joystick, no card support and thus no disk support
 
-Runs the autostart ROM with Applesoft II and monitor
+Runs Applesoft II and monitor from ROM
 
 Requires ncurses. To be run in a terminal at least 41x26
 
