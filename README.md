@@ -1,21 +1,18 @@
 # reinette-II
 The french Apple II emulator
 
-A simple Apple II emulator in about 600 lines of code !
+A simple Apple II emulator in less 600 lines of C !
 Based on reinette, the french Apple 1 emulator ( https://github.com/ArthurFerreira2/reinette )
 
-Only supports text, page 1 - No sound, no joystick, no card support and thus no disk support
+Very limited hardware support : only supports text, page 1
 
-Runs Applesoft II and monitor from ROM
+runs either the original Apple II ROM with Interger Basic and the Programmers Aid at $D000 or the later Applesoft II ROM :  just change the filename at line 548.
 
-Requires ncurses. To be run in a terminal at least 41x26
 
-- F9  : reset
-- F10 : break
+Requires ncurses. Meant to be run in a terminal at least 41x25
+
+- F7  : reset
 - F12 : exit
 
-Uncomment lines 566-567 to display some debug info
-
-Comment line 569 to go full speed
 
 Have fun !

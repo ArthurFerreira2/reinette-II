@@ -23,7 +23,6 @@
  THE SOFTWARE.
  */
 
-#include <stdlib.h>
 #include <ncurses.h>
 #include <unistd.h>       // for usleep()
 
@@ -53,8 +52,8 @@ struct Register{
   uint16_t PC;
 }reg;
 
-uint8_t key;
-bool videoNeedsRefresh;
+uint8_t key = 0;
+bool videoNeedsRefresh = true;
 
 
 // MEMORY AND I/O
@@ -66,7 +65,7 @@ static uint8_t readMem(uint16_t address){
   else if (address >= ROMSTART) return(rom[address - ROMSTART]);
 
   else if (address == 0xC000) {               // KBD
-    if (! ++queries) usleep(100);             // sleep 100ms every 256 requests
+    if (!queries++) usleep(100);              // sleep 100ms every 256 requests
     return(key);
   }
   else if (address == 0xC010){                // KBDSTRB
@@ -77,9 +76,8 @@ static uint8_t readMem(uint16_t address){
 }
 
 static void writeMem(uint16_t address, uint8_t value){
-  if (address>=0x400 && address<=0x7FF) videoNeedsRefresh = true;
+  if (address & 0x400) videoNeedsRefresh = true;
   if (address < RAMSIZE) ram[address] = value;
-
   else if (address == 0xC010) key &= 0x7F;    // KBDSTRB, similar as in readMem
 }
 
@@ -107,7 +105,7 @@ uint8_t pull(){
 }
 
 static void setSZ(uint8_t value){  //  update both the Sign & Zero FLAGS
-  if (value & 0x00FF) reg.SR &= ~ZERO;
+  if (value) reg.SR &= ~ZERO;
   else reg.SR |= ZERO;
   if (value & 0x80) reg.SR |= SIGN;
   else reg.SR &= ~SIGN;
@@ -523,7 +521,7 @@ static void (*addressing[])(void) = {
  REL, IDY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP
 };
 
-static int baseForLines[24] = { // helper for video generation
+static int offsetsForRows[24] = {  // helper for video generation
  0x400, 0x480, 0x500, 0x580, 0x600, 0x680, 0x700, 0x780,
  0x428, 0x4A8, 0x528, 0x5A8, 0x628, 0x6A8, 0x728, 0x7A8,
  0x450, 0x4D0, 0x550, 0x5D0, 0x650, 0x6D0, 0x750, 0x7D0
@@ -533,9 +531,8 @@ static int baseForLines[24] = { // helper for video generation
 // PROGRAM ENTRY POINT
 
 int main(int argc, char *argv[]) {
-  int ch = 0;
-  uint8_t opcode = 0;
-  uint8_t character = 0;
+  uint8_t opcode, glyph;
+  int ch;
 
   // ncurses initialization
   initscr();
@@ -543,12 +540,12 @@ int main(int argc, char *argv[]) {
   noecho();
   curs_set(0);
   qiflush();
-  keypad  (stdscr, TRUE);
-  nodelay (stdscr, TRUE);
-  scrollok(stdscr, TRUE);
+  keypad   (stdscr, TRUE);
+  nodelay  (stdscr, TRUE);
+  scrollok (stdscr, TRUE);
 
-  // load the ROM
-  FILE *f=fopen("apple2.rom","rb");
+  // load the original Apple][ ROM, including the Programmer's Aid at $D000
+  FILE *f=fopen("appleII.rom","rb");
   if (f != NULL) fread(rom, sizeof(uint8_t), ROMSIZE, f);
   fclose(f);
 
@@ -561,52 +558,43 @@ int main(int argc, char *argv[]) {
       opcode = readMem(reg.PC++); // FETCH and increment the Program Counter
       addressing[opcode]();       // DECODE operands against the addressing mode
       instruction[opcode]();      // EXECUTE the instruction
-
-      // DEBUG : print registers values and keypressed
-      //move(25,0);                 // at bottom of screen
-      //printw("PC-%04X A-%02X X-%02X Y-%02X S-%02X P-%02X KEY-%02X",reg.PC ,reg.A, reg.X, reg.Y, reg.SP, reg.SR, key);
     }
-    usleep(225); // 225ms for 100 instructions gives roughly the original speed
+
+    // slow down emulation - so you can hit thoses colored monsters
+    usleep(160);
 
     // keyboard controller
-    if (key < 0x80 && (ch = getch()) != ERR){              // non blocking read
-      if      (ch == KEY_F( 9)) reset();                   // F09, reset
-      else if (ch == KEY_F(10)) BRK();                     // F10, break
-      else if (ch == KEY_F(12)) {                          // F12, exit program
-        endwin();                                          // reset terminal
-        exit(0);                                           // and terminate
+    if ((ch = getch()) != ERR){
+      if (ch == KEY_F( 7)) reset();                      // F7, reset
+      if (ch == KEY_F(12)) { endwin(); return(0); }      // F12, exit program
+      switch(key=(uint8_t)ch){                           // key translations
+        case 0x0A: key = 0x0D; break;                    // LF    to CR
+        case 0x04: key = 0x08; break;                    // LEFT  to BS
+        case 0x05: key = 0x15; break;                    // RIGHT to NAK
+        case 0x07: key = 0x08; break;                    // BELL  to BS ?
       }
-      else {  // the key is sent to the emulator after some translations
-        switch(key=(uint8_t)ch){
-          case 0x0A: key = 0x0D; break;                    // LF    to CR
-          case 0x04: key = 0x08; break;                    // LEFT  to BS
-          case 0x05: key = 0x15; break;                    // RIGHT to LF
-          case 0x07: key = 0x08; break;                    // BELL  to BS
-        }
-        key |= 0x80;                                       // set bit 7
-      }
+      if ((key > 0x60) && (key < 0x7B)) key -= 0x20;     // to upper case
+      key |= 0x80;                                       // set bit 7
     }
 
-    // video controller only supports page 1 text mode
-    if (videoNeedsRefresh){                                // content changed
+    // video controller - supports only page 1 text mode
+    if (videoNeedsRefresh){                              // if content changed
       move(0, 0);
-      for(int line=0; line<24; line++){                    // for each row
-        for(int col=0; col<40; col++){                     // for each column
-          character = ram[baseForLines[line]+col];         // read video memory
-          if (character == '`') character = '_';           // change cursor
-          if (character < 0x40) attrset(A_REVERSE);        // is REVERSE ?
-          else if (character > 0x7F) attrset(A_NORMAL);    // is NORMAL ?
-          else attrset(A_BLINK);                           // is FLASHING ?
-          character &= 0x7F;                               // unset bit 7
-          if (character > 0x5F) character &= 0x3F;         // shifts to obtain
-          if (character < 0x20) character |= 0x40;         // the ASCII codes
-          printw("%c", character);                         // print character
-
+      for(int row=0; row<24; row++){                     // for each row
+        for(int col=0; col<40; col++){                   // for each column
+          glyph = ram[offsetsForRows[row] + col];        // read video memory
+          if (glyph == '`') glyph = '_';                 // change cursor shape
+          if (glyph < 0x40) attrset(A_REVERSE);          // is REVERSE ?
+          else if (glyph > 0x7F) attrset(A_NORMAL);      // is NORMAL ?
+          else attrset(A_BLINK);                         // it's FLASHING !
+          glyph &= 0x7F;                                 // unset bit 7
+          if (glyph > 0x5F) glyph &= 0x3F;               // shifts to match
+          if (glyph < 0x20) glyph |= 0x40;               // the ASCII codes
+          addch(glyph);                                  // print the glyph
         }
-        printw("%c", 0x0A);                                // carriage return
+        addch(0x0A);                                     // to next row
       }
       videoNeedsRefresh = false;
-      attrset(A_NORMAL);
     }
   }
 }
