@@ -519,16 +519,16 @@ static void (*addressing[])(void) = {
  REL, IDY, IMP, IMP, IMP, ZPX, ZPX, IMP, IMP, ABY, IMP, IMP, IMP, ABX, ABX, IMP
 };
 
-static int offsetsForRows[24] = {  // helper for video generation
- 0x400, 0x480, 0x500, 0x580, 0x600, 0x680, 0x700, 0x780,
- 0x428, 0x4A8, 0x528, 0x5A8, 0x628, 0x6A8, 0x728, 0x7A8,
- 0x450, 0x4D0, 0x550, 0x5D0, 0x650, 0x6D0, 0x750, 0x7D0
-};
-
 
 // PROGRAM ENTRY POINT
 
 int main(int argc, char *argv[]) {
+
+  static int offsetsForRows[24] = {  // helper for video generation
+    0x400, 0x480, 0x500, 0x580, 0x600, 0x680, 0x700, 0x780,
+    0x428, 0x4A8, 0x528, 0x5A8, 0x628, 0x6A8, 0x728, 0x7A8,
+    0x450, 0x4D0, 0x550, 0x5D0, 0x650, 0x6D0, 0x750, 0x7D0
+  };
   uint8_t opcode, glyph;
   int ch;
 
@@ -543,7 +543,7 @@ int main(int argc, char *argv[]) {
   scrollok (stdscr, TRUE);
 
   // load the original Apple][ ROM, including the Programmer's Aid at $D000
-  FILE *f=fopen("appleII.rom","rb");
+  FILE *f = fopen("appleII.rom","rb");
   if (f != NULL) fread(rom, sizeof(uint8_t), ROMSIZE, f);
   fclose(f);
 
