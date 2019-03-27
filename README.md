@@ -9,7 +9,7 @@ Very limited hardware support : only supports text, page 1
 runs either the original Apple II ROM with Interger Basic and the Programmers Aid at $D000 or the later Applesoft II ROM :  just change the filename at line 546.
 
 
-Requires ncurses. Meant to be run in a terminal at least 41x25
+Requires ncurses. Meant to be run from console
 
 - F7  : reset
 - F12 : exit
