@@ -476,8 +476,6 @@ static void SBC(){  // SuBtract with Carry
 }
 
 static void UND(){  // UNDefined (not a valid or supported 6502 opcode)
-  printw("\n\n~ Illegal Instruction At Address $%04X ~\n", reg.PC - 1);
-  BRK();
 }
 
 
