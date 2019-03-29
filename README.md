@@ -15,4 +15,4 @@ Requires ncurses. Meant to be run from console
 - F12 : exit
 
 
-Have fun !
+"simplicity is the ultimate sophistication"
