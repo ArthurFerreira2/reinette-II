@@ -6,7 +6,7 @@ Based on reinette, the french Apple 1 emulator ( https://github.com/ArthurFerrei
 
 Very limited hardware support : only supports text, page 1
 
-runs either the original Apple II ROM with Interger Basic and the Programmers Aid at $D000 or the later Applesoft II ROM :  just change the filename at line 540.
+Runs either the original Apple II ROM with Interger Basic and the Programmers Aid at $D000 or the later Applesoft II ROM.
 
 
 Requires ncurses. Meant to be run from console
