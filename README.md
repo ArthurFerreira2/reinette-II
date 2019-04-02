@@ -21,6 +21,6 @@ Requires ncurses. Meant to be run from console
 - F12 : exit
 ~~~
 
-*** "simplicity is the ultimate sophistication" ***
+*simplicity is the ultimate sophistication*
 
 
