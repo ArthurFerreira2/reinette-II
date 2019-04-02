@@ -59,20 +59,14 @@ bool videoNeedsRefresh = true;
 // MEMORY AND I/O
 
 static uint8_t readMem(uint16_t address){
-  static uint8_t queries=0; // slow down emulation when looping for a keypress
-
-  if (address <  RAMSIZE)  return(ram[address]);
+  if      (address <  RAMSIZE)  return(ram[address]);
   else if (address >= ROMSTART) return(rom[address - ROMSTART]);
-
-  else if (address == 0xC000) {               // KBD
-    if (!queries++) usleep(100);              // sleep 100ms every 256 requests
-    return(key);
-  }
+  else if (address == 0xC000)   return(key);  // KBD
   else if (address == 0xC010){                // KBDSTRB
     key &= 0x7F;                              // unset bit 7
     return(key);
   }
-  else return(0);                             // catch all
+  return(0);                                  // catch all
 }
 
 static void writeMem(uint16_t address, uint8_t value){
