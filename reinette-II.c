@@ -24,7 +24,6 @@
  */
 
 #include <ncurses.h>
-#include <unistd.h>       // for usleep()
 
 #define ROMSTART 0xD000
 #define ROMSIZE 0x3000    // 12KB
@@ -552,8 +551,8 @@ int main(int argc, char *argv[]) {
       instruction[opcode]();      // EXECUTE the instruction
     }
 
-    // slow down emulation - so you can hit thoses colored monsters
-    usleep(160);
+    // slow down emulation
+    napms(1);
 
     // keyboard controller
     if ((ch = getch()) != ERR){
@@ -590,3 +589,4 @@ int main(int argc, char *argv[]) {
     }
   }
 }
+
