@@ -1,7 +1,7 @@
 # reinette-II
 The french* Apple II emulator
 
-* reinette has two meanings in french : it's a little frog but also a delicious kind of Apple
+ `* reinette has two meanings in french : it's a little frog but also a delicious kind of Apple
   
   
 
