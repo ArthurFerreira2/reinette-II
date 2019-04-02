@@ -1,5 +1,11 @@
 # reinette-II
-The french Apple II emulator
+The french* Apple II emulator
+
+ * reinette has two meanings in french :
+	- a little frog
+	- a delicious kind of Apple
+  
+  
 
 A simple Apple II emulator in less 600 lines of C !
 Based on reinette, the french Apple 1 emulator ( https://github.com/ArthurFerreira2/reinette )
@@ -10,9 +16,11 @@ Runs either the original Apple II ROM with Interger Basic and the Programmers Ai
 
 
 Requires ncurses. Meant to be run from console
-
+~~~
 - F7  : reset
 - F12 : exit
+~~~
+
+### "simplicity is the ultimate sophistication"
 
 
-"simplicity is the ultimate sophistication"
