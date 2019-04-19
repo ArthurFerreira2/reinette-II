@@ -25,18 +25,18 @@
 
 #include <ncurses.h>
 
-#define ROMSTART 0xD000
-#define ROMSIZE 0x3000    // 12KB
-#define RAMSIZE 0xC000    // 48KB
-
-#define CARRY 0x01
-#define ZERO 0x02
+#define CARRY     0x01
+#define ZERO      0x02
 #define INTERRUPT 0x04
-#define DECIMAL 0x08
-#define BREAK 0x10
+#define DECIMAL   0x08
+#define BREAK     0x10
 #define UNDEFINED 0x20
-#define OVERFLOW 0x40
-#define SIGN 0x80
+#define OVERFLOW  0x40
+#define SIGN      0x80
+
+#define ROMSTART  0xD000
+#define ROMSIZE   0x3000    // 12KB
+#define RAMSIZE   0xC000    // 48KB
 
 uint8_t rom[ROMSIZE];
 uint8_t ram[RAMSIZE];
@@ -58,36 +58,24 @@ bool videoNeedsRefresh = true;
 // MEMORY AND I/O
 
 static uint8_t readMem(uint16_t address){
-  if (address <  RAMSIZE)       return(ram[address]);
-  else if (address >= ROMSTART) return(rom[address - ROMSTART]);
-  else if (address == 0xC000)   return(key);  // KBD
-  else if (address == 0xC010){                // KBDSTRB
-    key &= 0x7F;                              // unset bit 7
+  if (address <  RAMSIZE)  return(ram[address]);
+  if (address >= ROMSTART) return(rom[address - ROMSTART]);
+  if (address == 0xC000)   return(key);          // KBD
+  if (address == 0xC010){                        // KBDSTRB
+    key &= 0x7F;                                 // unset bit 7
     return(key);
   }
-  else return(0);                             // catch all
+  return(0);                                     // catch all
 }
 
 static void writeMem(uint16_t address, uint8_t value){
-  if (address & 0x400) videoNeedsRefresh = true;  // a change in text page 1
+  if (address & 0x400) videoNeedsRefresh = true; // a change in text page 1
   if (address < RAMSIZE) ram[address] = value;
-  else if (address == 0xC010) key &= 0x7F;    // KBDSTRB, similar as in readMem
+  else if (address == 0xC010) key &= 0x7F;       // KBDSTRB, as in readMem
 }
 
 
-// RESET
-
-static void reset(){
-  reg.PC = readMem(0xFFFC) | (readMem(0xFFFD) << 8);
-  reg.SP = 0xFF;
-  reg.SR |= UNDEFINED;
-  ope.setAcc = false;
-  ope.value = 0;
-  ope.address = 0;
-}
-
-
-// STACK, SIGN AND ZERO FLAGS ROUTINES
+// STACK, FLAGS AND RESET ROUTINES
 
 static void push(uint8_t value){
   writeMem(0x100 + reg.SP--, value);
@@ -102,6 +90,10 @@ static void setSZ(uint8_t value){  //  update both the Sign & Zero FLAGS
   else reg.SR |= ZERO;
   if (value & 0x80) reg.SR |= SIGN;
   else reg.SR &= ~SIGN;
+}
+
+static void reset(){  // the reset vector is in $FFFC
+  reg.PC = readMem(0xFFFC) | (readMem(0xFFFD) << 8);
 }
 
 
@@ -437,22 +429,22 @@ static void ROR(){  // ROtate Right
 static void ADC(){  // ADd with Carry
   uint16_t result = reg.A + ope.value + (reg.SR & CARRY);
   setSZ(result);
-  if (((result)^(reg.A ))&((result)^(ope.value))&0x0080) reg.SR |= OVERFLOW;
+  if (((result)^(reg.A )) & ((result)^(ope.value)) & 0x80) reg.SR |= OVERFLOW;
   else reg.SR &= ~OVERFLOW;
-  if (reg.SR&DECIMAL) result += ((((result+0x66)^reg.A^ope.value)>>3)&0x22)*3;
+  if (reg.SR&DECIMAL) result += ((((result+0x66)^reg.A^ope.value)>>3) & 0x22)*3;
   if (result & 0xFF00) reg.SR |= CARRY;
   else reg.SR &= ~CARRY;
   reg.A = (result & 0xFF);
 }
 
-static void SBC(){  // SuBtract with Carry
+static void SBC(){  // SuBtract with Carry : forum.6502.org/viewtopic.php?t=475
   ope.value ^= 0xFF;
-  if (reg.SR & DECIMAL) ope.value -= 0x0066;
+  if (reg.SR & DECIMAL) ope.value -= 0x66;
   uint16_t result = reg.A + ope.value + (reg.SR & CARRY);
   setSZ(result);
-  if (((result)^(reg.A ))&((result)^(ope.value))&0x0080) reg.SR |= OVERFLOW;
+  if (((result)^(reg.A )) & ((result)^(ope.value)) & 0x80) reg.SR |= OVERFLOW;
   else reg.SR &= ~OVERFLOW;
-  if (reg.SR&DECIMAL) result += ((((result+0x66)^reg.A^ope.value)>>3)&0x22)*3;
+  if (reg.SR&DECIMAL) result += ((((result+0x66)^reg.A^ope.value)>>3) & 0x22)*3;
   if (result & 0xFF00) reg.SR |= CARRY;
   else reg.SR &= ~CARRY;
   reg.A = (result & 0xFF);
@@ -507,7 +499,7 @@ static void (*addressing[])(void) = {
 
 int main(int argc, char *argv[]) {
 
-  static uint16_t offsetsForRows[24] = {  // helper for video generation
+  const uint16_t offsetsForRows[24] = {  // helper for video generation
     0x400, 0x480, 0x500, 0x580, 0x600, 0x680, 0x700, 0x780,
     0x428, 0x4A8, 0x528, 0x5A8, 0x628, 0x6A8, 0x728, 0x7A8,
     0x450, 0x4D0, 0x550, 0x5D0, 0x650, 0x6D0, 0x750, 0x7D0
@@ -523,7 +515,7 @@ int main(int argc, char *argv[]) {
   qiflush();
   keypad   (stdscr, TRUE);
   nodelay  (stdscr, TRUE);
-  scrollok (stdscr, TRUE);
+  scrollok (stdscr, FALSE);
 
   // load the original Apple][ ROM, including the Programmer's Aid at $D000
   FILE *f=fopen("appleII.rom","rb");
@@ -542,17 +534,17 @@ int main(int argc, char *argv[]) {
     }
 
     // slow down emulation
-    napms(1);
+    napms(0.6);
 
     // keyboard controller
-    if ((ch = getch()) != ERR){
+    if ((key < 0x80) && ((ch = getch()) != ERR)){
       if (ch == KEY_F( 7)) reset();                      // F7, processor reset
       if (ch == KEY_F(12)) { endwin(); return(0); }      // F12, exit program
       switch(key=(uint8_t)ch){                           // key translations
         case 0x0A: key = 0x0D; break;                    // LF    to CR
         case 0x04: key = 0x08; break;                    // LEFT  to BS
         case 0x05: key = 0x15; break;                    // RIGHT to NAK
-        case 0x07: key = 0x08; break;                    // BELL  to BS ?
+        case 0x07: key = 0x08; break;                    // BELL  to BS (!?)
       }
       if ((key>0x60) && (key<0x7B)) key&=0xDF;           // to upper case
       key |= 0x80;                                       // set bit 7
@@ -560,22 +552,21 @@ int main(int argc, char *argv[]) {
 
     // video controller - page 1 text mode only
     if (videoNeedsRefresh){                              // if content changed
-      move(0, 0);
+      videoNeedsRefresh = false;
       for (int row=0; row<24; row++){                    // for each row
+        move(row,0);
         for (int col=0; col<40; col++){                  // for each column
           glyph = ram[offsetsForRows[row] + col];        // read video memory
           if (glyph == '`') glyph = '_';                 // change cursor shape
           if (glyph < 0x40) attrset(A_REVERSE);          // is REVERSE ?
           else if (glyph > 0x7F) attrset(A_NORMAL);      // is NORMAL ?
-          else attrset(A_BLINK);                         // it's FLASHING !
+          else attrset(A_BLINK);                         // is FLASHING ?
           glyph &= 0x7F;                                 // unset bit 7
           if (glyph > 0x5F) glyph &= 0x3F;               // shifts to match
           if (glyph < 0x20) glyph |= 0x40;               // the ASCII codes
           addch(glyph);                                  // print the glyph
         }
-        addch(0x0A);                                     // to next row
       }
-      videoNeedsRefresh = false;
     }
   }
 }
